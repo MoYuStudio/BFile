@@ -1,98 +1,139 @@
-# BRF (Binary Run-length File) 格式
+<div align="center">
+  <img src="assets/BRF.png" alt="BRF Logo" width="200"/>
+</div>
 
-BRF是一种专为低功耗设备（如单片机、嵌入式系统）设计的高效文件格式，专为二值化数据（如黑白图像和视频）优化，采用改进的游程编码算法进行压缩。相比传统PBM格式，BRF能够实现约70%的压缩率，同时保持接近的解码性能。
+# BRF (Binary Run-length File)
 
-## 格式特点
+BRF是一个用于处理二值化图像和视频的Python库。它提供了一种高效的压缩格式，特别适合存储二值化的图像和视频数据。
 
-- **二值化处理 (Binary)**: 将输入数据转换为二值（0和1）表示
-- **游程编码 (Run-length)**: 使用改进的游程编码算法进行数据压缩
-- **通用文件格式 (File)**: 支持多种媒体类型，包括图像和视频
-- **低功耗优化**: 专为资源受限设备设计，最小化内存占用和CPU使用
+## 项目简介
 
-## 技术优势
+BRF库使用改进的游程编码算法，专门针对二值化图像和视频进行优化，可以实现极高的压缩率。该库支持多种格式转换，包括PNG到BRF、MP4到BV等，并提供base64编码支持，方便网络传输。
 
-1. **高效压缩**:
+**特别说明**: 本库最初是在树莓派Pico Pi 2上开发的，并且在Pico Pi 2上运行效果最佳。Pico Pi 2的有限资源使其成为测试和验证BRF压缩算法的理想平台，能够有效处理二值化图像和视频数据。
 
-   - 相比PBM格式减少约70%的文件体积
-   - 优化的游程编码算法，减少冗余数据
-   - 支持可变长度编码，适应不同数据特征
-2. **低资源消耗**:
+## 本地安装
 
-   - 最小化内存占用（通常<1KB RAM）
-   - 低CPU使用率，适合电池供电设备
-   - 无需复杂的数据结构支持
-3. **快速解码**:
+由于这是一个本地库，您需要将代码克隆到本地并安装：
 
-   - 接近PBM格式的解码速度
-   - 简单的解码算法，易于实现
-   - 支持流式处理，无需完整加载文件
-4. **通用性**:
+```bash
+# 克隆仓库
+git clone https://github.com/MoYuStudio/BRF.git
 
-   - 支持多种媒体类型，不局限于特定格式
-   - 兼容主流MCU平台
-   - 易于移植到不同硬件环境
+# 进入项目目录
+cd BRF
 
-## 使用场景
+# 安装依赖
+pip install -r requirements.txt
 
-- 单片机图像存储
-- 嵌入式系统日志
-- 低功耗传感器数据
-- 工业控制面板显示
-- 电子墨水屏显示
-- 简单图形界面存储
-
-## 性能对比
-
-| 特性       | BRF   | PBM  |
-| ---------- | ----- | ---- |
-| 文件大小   | ~30%  | 100% |
-| 解码速度   | ~100% | 100% |
-| RAM占用    | <1KB  | ~3KB |
-| CPU使用    | 低    | 中   |
-| 实现复杂度 | 简单  | 简单 |
-
-## 文件格式规范
-
-### 文件头
-
-```
-BRF\x01    // 魔数
-version    // 版本号（1字节）
-width      // 宽度（4字节）
-height     // 高度（4字节）
-type       // 数据类型（1字节：0=图像，1=视频）
-flags      // 标志位（1字节：压缩选项等）
+# 安装库
+pip install -e .
 ```
 
-### 数据块
+## 特性
+
+- 支持PNG图像与BRF格式之间的转换
+- 支持MP4视频与BV格式之间的转换
+- 使用改进的游程编码算法进行数据压缩
+- 支持base64编码转换
+- 提供详细的压缩率信息
+- 支持自定义二值化阈值
+- 支持视频帧率调整
+
+## 使用方法
+
+### 图像处理
+
+```python
+import BRF
+
+# PNG转BRF
+BRF.Image.png_to_binary("input.png", "output.bi", threshold=128)
+
+# BRF转PNG
+BRF.Image.binary_to_png("input.bi", "output.png")
+
+# BRF转base64
+base64_data = BRF.Image.bi_to_base64("input.bi")
+
+# base64转BRF
+BRF.Image.base64_to_bi(base64_data, "output.bi")
+
+# 获取压缩信息
+info = BRF.Image.get_compression_info("input.bi")
+print(f"原始大小: {info['original_size']} 字节")
+print(f"压缩后大小: {info['compressed_size']} 字节")
+print(f"压缩率: {info['compression_ratio']:.2f}%")
+```
+
+### 视频处理
+
+```python
+import BRF
+
+# MP4转BV
+BRF.Video.mp4_to_bv("input.mp4", "output.bv", threshold=128, target_fps=10)
+
+# BV转MP4
+BRF.Video.bv_to_mp4("input.bv", "output.mp4")
+
+# 获取视频信息
+info = BRF.Video.get_video_info("input.bv")
+print(f"帧数: {info['frame_count']}")
+print(f"分辨率: {info['width']}x{info['height']}")
+print(f"帧率: {info['fps']}")
+```
+
+## API文档
+
+### BRF.Image
+
+- `png_to_binary(png_path, bi_path, threshold=128)`: 将PNG图像转换为BRF格式
+- `binary_to_png(bi_path, png_path)`: 将BRF格式转换为PNG图像
+- `bi_to_base64(bi_path)`: 将BRF文件转换为base64字符串
+- `base64_to_bi(base64_str, bi_path)`: 将base64字符串转换为BRF文件
+- `get_compression_info(bi_path)`: 获取BRF文件的压缩信息
+
+### BRF.Video
+
+- `mp4_to_bv(mp4_path, bv_path, threshold=128, target_fps=10)`: 将MP4视频转换为BV格式
+- `bv_to_mp4(bv_path, mp4_path)`: 将BV格式转换为MP4视频
+- `get_video_info(bv_path)`: 获取BV文件的视频信息
+
+## 依赖
+
+- numpy >= 1.19.0
+- Pillow >= 8.0.0
+- opencv-python >= 4.5.0
+
+## 项目结构
 
 ```
-length     // 游程长度（变长编码）
-value      // 二值（0或1）
+BRF/
+├── BRF/
+│   ├── __init__.py
+│   ├── bi.py          # 图像处理模块
+│   ├── bv.py          # 视频处理模块
+│   └── core.py        # 核心功能模块
+├── tests/              # 测试用例
+├── examples/           # 示例代码
+├── setup.py            # 安装配置
+├── requirements.txt    # 依赖列表
+└── README.md           # 本文档
 ```
 
 ## 开发计划
 
-- [ ] 基础格式实现
-- [ ] 单片机示例代码
-- [ ] 压缩算法优化
-- [ ] 工具链开发
-- [ ] 性能基准测试
-
-## 贡献指南
-
-欢迎提交Issue和Pull Request来帮助改进BRF格式。请确保：
-
-1. 遵循现有的代码风格
-2. 添加适当的测试用例
-3. 更新相关文档
-4. 提供性能测试数据
+- [ ] 添加更多图像格式支持
+- [ ] 优化压缩算法
+- [ ] 添加GUI界面
+- [ ] 提供更多示例和教程
 
 ## 许可证
 
 Apache License 2.0
 
-Copyright 2024 BRF Contributors
+Copyright 2023 MoYuStudio
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

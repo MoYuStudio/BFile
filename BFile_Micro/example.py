@@ -39,20 +39,20 @@ def main():
         oled.fill(Color.BLACK)
         oled.show()
         
-        # 初始化BRFMicro
-        brf = BI(oled)
+        # 初始化BFileMicro
+        BFile = BI(oled)
         
-        # 检查BRF.bi文件是否存在
+        # 检查BFile.bi文件是否存在
         try:
-            with open("BRF.bi", "rb") as f:
+            with open("BFile.bi", "rb") as f:
                 file_size = len(f.read())
         except OSError:
-            print("Error: BRF.bi file not found")
+            print("Error: BFile.bi file not found")
             
-        # 显示BRF.bi图片
-        success = brf.display_bi_image_centered("BRF.bi", scale=1, color=Color.WHITE)
+        # 显示BFile.bi图片
+        success = BFile.display_bi_image_centered("BFile.bi", scale=1, color=Color.WHITE)
         if not success:
-            print("Error: Failed to display BRF.bi image")
+            print("Error: Failed to display BFile.bi image")
             
         time.sleep(1)
         
@@ -60,23 +60,23 @@ def main():
         print("Testing OLED with rainbow colors at 0.01s refresh rate...")
         for i in range(7):  # 彩虹色序列有7种颜色
             color = Color.RAINBOW[i]
-            brf.display_bi_image_centered("BRF.bi", scale=1, color=color)
+            BFile.display_bi_image_centered("BFile.bi", scale=1, color=color)
             time.sleep(0.1)
         
-        # 初始化BRFVideoMicro
-        brf_video = BV(oled)
+        # 初始化BFileVideoMicro
+        BFile_video = BV(oled)
         
-        # 检查BRF.bv文件是否存在
+        # 检查BFile.bv文件是否存在
         try:
-            with open("BRF.bv", "rb") as f:
+            with open("BFile.bv", "rb") as f:
                 file_size = len(f.read())
         except OSError:
-            print("Error: BRF.bv file not found")
+            print("Error: BFile.bv file not found")
             
-        # 播放BRF.bv视频
-        success = brf_video.play_bv_video("BRF.bv", scale=1, color=Color.WHITE, loop=3)
+        # 播放BFile.bv视频
+        success = BFile_video.play_bv_video("BFile.bv", scale=1, color=Color.WHITE, loop=3)
         if not success:
-            print("Error: Failed to play BRF.bv video")
+            print("Error: Failed to play BFile.bv video")
             
         # 清屏
         oled.fill(Color.BLACK)

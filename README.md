@@ -156,7 +156,7 @@ BRF/
 
 Apache 许可证 2.0
 
-版权所有 2023 MoYuStudio
+&copy; 2025 MoYuStudio. All rights reserved.
 
 根据Apache许可证2.0版（"许可证"）授权；
 除非符合许可证，否则不得使用此文件。

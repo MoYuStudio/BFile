@@ -2,10 +2,10 @@
   <img src="assets/BFile_logo_x10.png" alt="BFile Logo" width="200"/>
   <h1>B File (Binary File) 二值型文件</h1>
   <p>
-    <a href="https://github.com/MoYuStudio/b-file/stargazers"><img src="https://img.shields.io/github/stars/MoYuStudio/b-file.svg" alt="Stars"></a>
-    <a href="https://github.com/MoYuStudio/b-file/network/members"><img src="https://img.shields.io/github/forks/MoYuStudio/b-file.svg" alt="Forks"></a>
-    <a href="https://github.com/MoYuStudio/b-file/issues"><img src="https://img.shields.io/github/issues/MoYuStudio/b-file.svg" alt="Issues"></a>
-    <a href="https://github.com/MoYuStudio/b-file/blob/main/LICENSE"><img src="https://img.shields.io/github/license/MoYuStudio/b-file.svg" alt="License"></a>
+    <a href="https://github.com/MoYuStudio/BFile/stargazers"><img src="https://img.shields.io/github/stars/MoYuStudio/BFile.svg" alt="Stars"></a>
+    <a href="https://github.com/MoYuStudio/BFile/network/members"><img src="https://img.shields.io/github/forks/MoYuStudio/BFile.svg" alt="Forks"></a>
+    <a href="https://github.com/MoYuStudio/BFile/issues"><img src="https://img.shields.io/github/issues/MoYuStudio/BFile.svg" alt="Issues"></a>
+    <a href="https://github.com/MoYuStudio/BFile/blob/main/LICENSE"><img src="https://img.shields.io/github/license/MoYuStudio/BFile.svg" alt="License"></a>
   </p>
 </div>
 
@@ -66,10 +66,10 @@ BFile库采用改进的游程编码算法，专为小型二值化图像和视频
 
 ```bash
 # 克隆仓库
-git clone https://github.com/MoYuStudio/b-file.git
+git clone https://github.com/MoYuStudio/BFile.git
 
 # 进入项目目录
-cd b-file
+cd BFile
 
 # 安装依赖
 pip install -r requirements.txt

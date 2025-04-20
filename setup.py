@@ -8,7 +8,7 @@ setup(
     long_description_content_type="text/markdown",
     author="MoYuStudio",
     author_email="contact@moyustudio.com",
-    url="https://github.com/MoYuStudio/b-file",
+    url="https://github.com/MoYuStudio/BFile",
     packages=find_packages(),
     package_data={
         'BFile': ['*.py'],

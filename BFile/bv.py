@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-BRF (Binary Run-length File) 视频模块
-提供视频与BRF格式之间的转换功能
+BFile (Binary File) 视频模块
+提供视频与BFile格式之间的转换功能
 """
 
 import os
@@ -20,15 +20,15 @@ from .core import (
     compress_data, 
     decompress_data,
     get_file_size_info,
-    BRFError,
-    BRFEncodeError,
-    BRFDecodeError,
-    BRFFileError
+    Error,
+    EncodeError,
+    DecodeError,
+    FileError
 )
 
 
-class BRFVideo:
-    """BRF视频处理类"""
+class Video:
+    """视频处理类"""
     
     @staticmethod
     def mp4_to_bv(input_path: str, output_path: str, threshold: int = 128, target_fps: int = 10) -> bool:
@@ -45,16 +45,16 @@ class BRFVideo:
             是否成功
         """
         if not os.path.exists(input_path):
-            raise BRFFileError(f"输入文件不存在: {input_path}")
+            raise FileError(f"输入文件不存在: {input_path}")
             
         if not input_path.lower().endswith(".mp4"):
-            raise BRFEncodeError("输入文件必须是MP4格式")
+            raise EncodeError("输入文件必须是MP4格式")
 
         try:
             # 打开视频文件
             cap = cv2.VideoCapture(input_path)
             if not cap.isOpened():
-                raise BRFEncodeError("无法打开视频文件")
+                raise EncodeError("无法打开视频文件")
 
             # 获取视频信息
             width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -112,10 +112,10 @@ class BRFVideo:
             
             return True
 
-        except BRFError:
+        except Error:
             raise
         except Exception as e:
-            raise BRFEncodeError(f"MP4转BV失败: {str(e)}")
+            raise EncodeError(f"MP4转BV失败: {str(e)}")
 
     @staticmethod
     def bv_to_mp4(input_path: str, output_path: str, fps: Optional[int] = None) -> bool:
@@ -131,10 +131,10 @@ class BRFVideo:
             是否成功
         """
         if not os.path.exists(input_path):
-            raise BRFFileError(f"输入文件不存在: {input_path}")
+            raise FileError(f"输入文件不存在: {input_path}")
             
         if not input_path.lower().endswith(".bv"):
-            raise BRFDecodeError("输入文件必须是BV格式")
+            raise DecodeError("输入文件必须是BV格式")
 
         try:
             with open(input_path, "rb") as f:
@@ -189,7 +189,7 @@ class BRFVideo:
                 
                 if result.returncode != 0:
                     print(f"FFmpeg错误: {result.stderr}")
-                    raise BRFDecodeError(f"FFmpeg转换失败: {result.stderr}")
+                    raise DecodeError(f"FFmpeg转换失败: {result.stderr}")
 
                 # 清理临时文件
                 for i in range(total_frames):
@@ -202,22 +202,22 @@ class BRFVideo:
             print(f"转换成功: {input_path} -> {output_path}")
             return True
 
-        except BRFError:
+        except Error:
             raise
         except Exception as e:
-            raise BRFDecodeError(f"BV转MP4失败: {str(e)}")
+            raise DecodeError(f"BV转MP4失败: {str(e)}")
 
 
 def main():
     """主函数，用于测试"""
     try:
         # 测试MP4到BV的转换
-        BRFVideo.mp4_to_bv("a_cut.mp4", "a_cut.bv", threshold=128, target_fps=10)
+        Video.mp4_to_bv("a_cut.mp4", "a_cut.bv", threshold=128, target_fps=10)
         
         # 测试BV到MP4的转换
-        BRFVideo.bv_to_mp4("a_cut.bv", "a_cut_back.mp4")
+        Video.bv_to_mp4("a_cut.bv", "a_cut_back.mp4")
         
-    except BRFError as e:
+    except Error as e:
         print(f"错误: {str(e)}")
     except Exception as e:
         print(f"未知错误: {str(e)}")

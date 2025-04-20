@@ -1,14 +1,18 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="brf",
+    name="b-file",
     version="0.1.0",
-    description="BRF (Binary Run-length File) - 一个用于处理二值化图像和视频的Python库",
-    author="Your Name",
-    author_email="your.email@example.com",
+    description="BFile (Binary File) - 一个专为小型二值化图像开发优化的Python库",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
+    author="MoYuStudio",
+    author_email="contact@moyustudio.com",
+    url="https://github.com/MoYuStudio/b-file",
     packages=find_packages(),
     package_data={
-        'BRF': ['*.py'],
+        'BFile': ['*.py'],
+        'BFile_Micro': ['*.py'],
     },
     include_package_data=True,
     install_requires=[
@@ -20,7 +24,7 @@ setup(
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",

@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 """
-BRF (Binary Run-length File) 图像模块
-提供图像与BRF格式之间的转换功能
+BFile (Binary File) 图像模块
+提供图像与BFile格式之间的转换功能
 """
 
 import os
 import numpy as np
-from PIL import Image
+from PIL import Image as PILImage
 import struct
 from typing import Optional, Tuple
 
@@ -17,21 +17,21 @@ from .core import (
     decode_run_length, 
     compress_data, 
     decompress_data,
-    BRFError,
-    BRFEncodeError,
-    BRFDecodeError,
-    BRFFileError
+    Error,
+    EncodeError,
+    DecodeError,
+    FileError
 )
 
-class BRFImage:
+class Image:
     @staticmethod
     def png_to_binary(input_path: str, output_path: str, threshold: int = 128) -> bool:
         """
-        将PNG图像转换为BRF二进制格式
+        将PNG图像转换为二进制格式
         
         Args:
             input_path: 输入PNG图像路径
-            output_path: 输出BRF文件路径
+            output_path: 输出文件路径
             threshold: 二值化阈值，默认128
             
         Returns:
@@ -39,7 +39,7 @@ class BRFImage:
         """
         try:
             # 读取图像并转换为灰度图
-            img = Image.open(input_path).convert('L')
+            img = PILImage.open(input_path).convert('L')
             img_array = np.array(img)
             
             # 二值化处理
@@ -61,15 +61,15 @@ class BRFImage:
             return True
             
         except Exception as e:
-            raise BRFEncodeError(f"PNG转BRF失败: {str(e)}")
+            raise EncodeError(f"PNG转失败: {str(e)}")
 
     @staticmethod
     def binary_to_png(input_path: str, output_path: str) -> bool:
         """
-        将BRF二进制格式转换为PNG图像
+        将二进制格式转换为PNG图像
         
         Args:
-            input_path: 输入BRF文件路径
+            input_path: 输入文件路径
             output_path: 输出PNG图像路径
             
         Returns:
@@ -96,21 +96,21 @@ class BRFImage:
             img_array = np.array(binary).reshape(height, width)
             
             # 转换为PIL图像并保存
-            img = Image.fromarray(img_array * 255)
+            img = PILImage.fromarray(img_array * 255)
             img.save(output_path)
             
             return True
             
         except Exception as e:
-            raise BRFDecodeError(f"BRF转PNG失败: {str(e)}")
+            raise DecodeError(f"转PNG失败: {str(e)}")
 
     @staticmethod
     def bi_to_base64(input_path: str) -> Optional[bytes]:
         """
-        将BRF文件转换为base64编码
+        将文件转换为base64编码
         
         Args:
-            input_path: BRF文件路径
+            input_path: 文件路径
             
         Returns:
             bytes: base64编码的数据
@@ -120,16 +120,16 @@ class BRFImage:
             with open(input_path, 'rb') as f:
                 return base64.b64encode(f.read())
         except Exception as e:
-            raise BRFFileError(f"BRF转base64失败: {str(e)}")
+            raise FileError(f"转base64失败: {str(e)}")
 
     @staticmethod
     def base64_to_bi(base64_data: bytes, output_path: str) -> bool:
         """
-        将base64编码转换为BRF文件
+        将base64编码转换为文件
         
         Args:
             base64_data: base64编码的数据
-            output_path: 输出BRF文件路径
+            output_path: 输出文件路径
             
         Returns:
             bool: 转换是否成功
@@ -140,15 +140,7 @@ class BRFImage:
                 f.write(base64.b64decode(base64_data))
             return True
         except Exception as e:
-            raise BRFFileError(f"base64转BRF失败: {str(e)}")
-
-def main():
-    """测试函数"""
-    # 测试PNG到BRF的转换
-    BRFImage.png_to_binary("test.png", "test.bi")
-    
-    # 测试BRF到PNG的转换
-    BRFImage.binary_to_png("test.bi", "test_back.png")
+            raise FileError(f"base64转失败: {str(e)}")
 
 if __name__ == "__main__":
-    main()
+    pass

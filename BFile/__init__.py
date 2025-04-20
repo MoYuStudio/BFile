@@ -2,18 +2,18 @@
 # -*- coding: utf-8 -*-
 
 """
-BRF (Binary Run-length File) - 一个用于处理二值化图像和视频的Python库
+BFile (Binary File) - 一个用于处理二值化图像和视频的Python库
 """
 
 __version__ = "0.1.0"
 
-from .bi import BRFImage as Image
-from .bv import BRFVideo as Video
+from .bi import Image as Image
+from .bv import Video as Video
 from .core import (
-    BRFError,
-    BRFEncodeError,
-    BRFDecodeError,
-    BRFFileError,
+    Error,
+    EncodeError,
+    DecodeError,
+    FileError,
     encode_run_length,
     decode_run_length,
     compress_data,
@@ -24,12 +24,12 @@ from .core import (
 )
 
 __all__ = [
-    'BRFImage',
-    'BRFVideo',
-    'BRFError',
-    'BRFEncodeError',
-    'BRFDecodeError',
-    'BRFFileError',
+    'Image',
+    'Video',
+    'Error',
+    'EncodeError',
+    'DecodeError',
+    'FileError',
     'encode_run_length',
     'decode_run_length',
     'compress_data',

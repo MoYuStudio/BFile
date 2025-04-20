@@ -13,6 +13,7 @@ import os
 from machine import Pin, SPI
 import framebuf
 import sys
+import gc
 
 from BFile_Micro.color import Color
 
@@ -31,6 +32,13 @@ class BV:
         self.height = oled_display.height
         self.paused = False
         self.playing = False
+        self.frame_cache = {}  # 帧缓存
+        self.max_cache_size = 10  # 最大缓存帧数
+        self.auto_update = True  # 自动更新显示
+        
+        # 如果OLED对象有set_auto_update方法，则设置自动更新
+        if hasattr(self.oled, 'set_auto_update'):
+            self.oled.set_auto_update(False)  # 关闭自动更新，提高性能
         
     def decode_run_length(self, data, total_bits):
         """
@@ -46,23 +54,29 @@ class BV:
         if len(data) == 0:
             return []
             
-        result = []
-        start_bit = data[0]
-        current = start_bit
+        # 使用bytearray代替list，提高性能
+        result = bytearray(total_bits)
+        pos = 0
+        current = data[0]
         
         # 从第二个字节开始解码
         for i in range(1, len(data)):
             packed = data[i]
             count = (packed >> 4) & 0xF  # 获取高4位的计数
             current = packed & 0xF  # 获取低4位的当前位值
-            result.extend([current] * count)
             
-        # 确保解压后的数据长度正确
-        if len(result) > total_bits:
-            result = result[:total_bits]
-        elif len(result) < total_bits:
-            # 如果长度不够，用最后一个位填充
-            result.extend([current] * (total_bits - len(result)))
+            # 批量填充，而不是逐个添加
+            for j in range(count):
+                if pos < total_bits:
+                    result[pos] = current
+                    pos += 1
+                else:
+                    break
+                    
+        # 如果长度不够，用最后一个位填充
+        while pos < total_bits:
+            result[pos] = current
+            pos += 1
             
         return result
         
@@ -121,9 +135,14 @@ class BV:
                     
                 # 从已解压的数据中复制匹配的数据
                 start = len(result) - offset
-                for i in range(length):
-                    if start + i < len(result):
-                        result.append(result[start + i])
+                # 使用extend代替循环，提高性能
+                if start >= 0 and start + length <= len(result):
+                    result.extend(result[start:start+length])
+                else:
+                    # 处理边界情况
+                    for i in range(length):
+                        if start + i < len(result):
+                            result.append(result[start + i])
             else:
                 # 直接读取原始字节
                 if pos < data_len:
@@ -156,6 +175,10 @@ class BV:
         返回:
             (width, height, binary_data): 帧宽度、高度和二值化数据
         """
+        # 检查缓存中是否已有该帧
+        if frame_index in self.frame_cache:
+            return self.video_width, self.video_height, self.frame_cache[frame_index]
+            
         try:
             # 读取帧大小
             frame_size_bytes = bv_file.read(4)
@@ -180,6 +203,14 @@ class BV:
             # 解码游程长度
             binary = self.decode_run_length(encoded, total_bits)
             
+            # 缓存帧数据
+            if len(self.frame_cache) >= self.max_cache_size:
+                # 如果缓存已满，删除最早的帧
+                oldest_frame = min(self.frame_cache.keys())
+                del self.frame_cache[oldest_frame]
+                
+            self.frame_cache[frame_index] = binary
+            
             return self.video_width, self.video_height, binary
             
         except Exception as e:
@@ -197,6 +228,9 @@ class BV:
             bool: 是否成功加载
         """
         try:
+            # 清空帧缓存
+            self.frame_cache.clear()
+            
             # 检查文件是否存在
             try:
                 with open(bv_path, "rb") as f:
@@ -246,43 +280,32 @@ class BV:
                 
             # 清屏
             self.oled.fill(bg_color)
-            self.oled.show()  # 确保清屏生效
             
-            # 使用draw_pixels方法绘制帧
-            pixels = []
-            pixel_count = 0
-            
-            for i in range(height):
-                for j in range(width):
-                    pixel = binary[i * width + j]
-                    if pixel == 1:  # 明确检查像素值是否为1
-                        if scale > 1:
-                            # 如果设置了缩放，则添加多个像素
-                            for si in range(scale):
-                                for sj in range(scale):
-                                    pixels.append((x + j * scale + sj, y + i * scale + si, color))
-                        else:
-                            pixels.append((x + j, y + i, color))
-                        pixel_count += 1
-                    elif bg_color != Color.BLACK:
-                        if scale > 1:
-                            # 如果设置了缩放，则添加多个像素
-                            for si in range(scale):
-                                for sj in range(scale):
-                                    pixels.append((x + j * scale + sj, y + i * scale + si, bg_color))
-                        else:
-                            pixels.append((x + j, y + i, bg_color))
-            
-            # 批量绘制像素
-            if hasattr(self.oled, 'draw_pixels'):
-                self.oled.draw_pixels(pixels)
+            # 优化：直接使用framebuf的方法绘制，而不是创建像素列表
+            if scale == 1:
+                # 如果不需要缩放，直接绘制
+                for i in range(height):
+                    for j in range(width):
+                        pixel = binary[i * width + j]
+                        if pixel == 1:
+                            self.oled.pixel(x + j, y + i, color)
+                        elif bg_color != Color.BLACK:
+                            self.oled.pixel(x + j, y + i, bg_color)
             else:
-                # 如果不支持批量绘制，则逐个绘制
-                for px, py, pc in pixels:
-                    self.oled.pixel(px, py, pc)
+                # 如果需要缩放，使用优化的方法
+                for i in range(height):
+                    for j in range(width):
+                        pixel = binary[i * width + j]
+                        if pixel == 1:
+                            # 使用fill_rect代替多个pixel调用，提高性能
+                            self.oled.fill_rect(x + j * scale, y + i * scale, scale, scale, color)
+                        elif bg_color != Color.BLACK:
+                            self.oled.fill_rect(x + j * scale, y + i * scale, scale, scale, bg_color)
             
             # 更新显示
-            self.oled.show()
+            if self.auto_update:
+                self.oled.show()
+                
             return True
             
         except Exception as e:
@@ -339,6 +362,10 @@ class BV:
             # 计算帧延迟时间
             frame_delay = 1.0 / self.fps
             
+            # 关闭自动更新，提高性能
+            if hasattr(self.oled, 'set_auto_update'):
+                self.oled.set_auto_update(False)
+                
             # 使用更简单、更直接的循环逻辑
             for i in range(loop):
                 # 打开视频文件
@@ -360,13 +387,27 @@ class BV:
                             print(f"Error: Failed to display frame {i+1}")
                             return False
                             
+                        # 手动更新显示
+                        self.oled.show()
+                        
                         # 延迟
                         time.sleep(frame_delay)
+                        
+                        # 定期进行垃圾回收，防止内存泄漏
+                        if i % 10 == 0:
+                            gc.collect()
                     
+            # 恢复自动更新
+            if hasattr(self.oled, 'set_auto_update'):
+                self.oled.set_auto_update(True)
+                
             return True
             
         except Exception as e:
             print(f"Error: Failed to play BFile.bv video: {str(e)}")
+            # 确保恢复自动更新
+            if hasattr(self.oled, 'set_auto_update'):
+                self.oled.set_auto_update(True)
             return False
             
     def play_bv_video_with_controls(self, bv_path, scale=1, color=Color.WHITE, bg_color=Color.BLACK):
@@ -391,6 +432,10 @@ class BV:
             # 计算帧延迟时间
             frame_delay = 1.0 / self.fps
             
+            # 关闭自动更新，提高性能
+            if hasattr(self.oled, 'set_auto_update'):
+                self.oled.set_auto_update(False)
+                
             # 播放视频
             self.playing = True
             self.paused = False
@@ -422,13 +467,27 @@ class BV:
                         print(f"Error: Failed to display frame {i+1}")
                         return False
                         
+                    # 手动更新显示
+                    self.oled.show()
+                        
                     # 延迟
                     time.sleep(frame_delay)
                     
+                    # 定期进行垃圾回收，防止内存泄漏
+                    if i % 10 == 0:
+                        gc.collect()
+                    
+            # 恢复自动更新
+            if hasattr(self.oled, 'set_auto_update'):
+                self.oled.set_auto_update(True)
+                
             return True
             
         except Exception as e:
             print(f"Error: Failed to play BFile.bv video: {str(e)}")
+            # 确保恢复自动更新
+            if hasattr(self.oled, 'set_auto_update'):
+                self.oled.set_auto_update(True)
             return False
             
     def pause_video(self):

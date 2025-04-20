@@ -7,9 +7,13 @@ BFile Micro - 使用示例
 包含OLED驱动初始化、图片显示和视频播放的完整示例
 """
 
+import machine
+
+import os
 import time
 import os
 import sys
+
 
 # 导入模块
 from BFile_Micro import Color, BI, BV
@@ -20,6 +24,9 @@ def main():
     包括OLED驱动初始化、图片显示和视频播放
     """
     try:
+        # 设置CPU频率为280MHz
+        machine.freq(280_000_000)
+        
         # 尝试导入OLED驱动
         oled = None
         
@@ -61,7 +68,7 @@ def main():
         for i in range(7):  # 彩虹色序列有7种颜色
             color = Color.RAINBOW[i]
             BFile.display_bi_image_centered("BFile.bi", scale=1, color=color)
-            time.sleep(0.1)
+            # time.sleep(0.1)
         
         # 初始化BFileVideoMicro
         BFile_video = BV(oled)
